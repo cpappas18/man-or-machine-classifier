@@ -24,9 +24,9 @@ test_generator = test_datagen.flow_from_dataframe(dataframe=testdf, directory=No
 cnn = Sequential()
 cnn.add(Conv2D(32, (3,3), padding = 'same', input_shape = (32,32,3), data_format='channels_last', activation = 'relu'))
 cnn.add(MaxPooling2D(pool_size = (2,2)))
-cnn.add(Conv2D(64, (3,3), padding = 'same', input_shape = (31,31,3), data_format='channels_last', activation = 'relu'))
+cnn.add(Conv2D(64, (3,3), padding = 'same', data_format='channels_last', activation = 'relu'))
 cnn.add(MaxPooling2D(pool_size = (2,2)))
-cnn.add(Conv2D(128, (3,3), padding = 'same', input_shape = (30,30,3), data_format='channels_last', activation = 'relu'))
+cnn.add(Conv2D(128, (3,3), padding = 'same', data_format='channels_last', activation = 'relu'))
 cnn.add(MaxPooling2D(pool_size = (2,2)))
 cnn.add(Flatten())   
 cnn.add(Dense(64, activation = 'relu'))
@@ -34,24 +34,23 @@ cnn.add(Dropout(0.25))
 cnn.add(Dense(2, activation = 'softmax'))
 
 # compiling the model 
-cnn.compile(keras.optimizers.Adam(lr=0.0001, decay=1e-6), loss = 'categorical_crossentropy', metrics = ['accuracy'])
+cnn.compile(keras.optimizers.Adam(lr=0.0001), loss = 'categorical_crossentropy', metrics = ['accuracy'])
 
 # fitting the model 
 step_size_train = train_generator.n//train_generator.batch_size
 step_size_valid = valid_generator.n//valid_generator.batch_size
-cnn.fit_generator(generator=train_generator,
-                    steps_per_epoch=step_size_train,
+cnn.fit(x=train_generator, steps_per_epoch=step_size_train,
                     validation_data=valid_generator,
                     validation_steps=step_size_valid,
                     epochs=10)
 
 # evaluating the model 
 step_size_test = test_generator.n//test_generator.batch_size
-cnn.evaluate_generator(generator=valid_generator, steps=step_size_test)
+cnn.evaluate(x=test_generator, steps=step_size_test)
 
 # predicting output
 test_generator.reset()
-pred = cnn.predict_generator(test_generator, steps=step_size_test, verbose=1)
+pred = cnn.predict(x=test_generator, steps=step_size_test, verbose=1)
 predicted_class_indices = np.argmax(pred,axis=1)
 labels = (train_generator.class_indices)
 labels = dict((v,k) for k,v in labels.items())
@@ -61,6 +60,9 @@ predictions = [labels[k] for k in predicted_class_indices]
 filenames = test_generator.filenames
 results = pd.DataFrame({"Filename":filenames, "Predictions":predictions})
 results.to_csv("results.csv",index=False)
+
+# saving the model 
+model.save('man_machine_cnn.h5')
 
 # predict your own image
 my_input = input("The network wants to predict more images! Input a file path to your own image of a human or machine: ")
