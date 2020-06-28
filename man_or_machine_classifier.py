@@ -13,10 +13,11 @@ from PIL import Image
 header_list = ['path', 'label']
 traindf = pd.read_csv('./train_data.csv', dtype = str, names = header_list)
 testdf = pd.read_csv('./test_data.csv', dtype = str, names = header_list)
-datagen = ImageDataGenerator(rescale = 1./255, validation_split = 0.2)
 
+datagen = ImageDataGenerator(rescale = 1./255, validation_split = 0.2)
 train_generator = datagen.flow_from_dataframe(dataframe=traindf, directory=None, x_col='path', y_col='label', subset='training', batch_size=20, class_mode='categorical', target_size=(32,32))
 valid_generator = datagen.flow_from_dataframe(dataframe=traindf, directory=None, x_col='path', y_col='label', subset='validation', batch_size=20, class_mode='categorical', target_size=(32,32))
+
 test_datagen = ImageDataGenerator(rescale = 1./255)
 test_generator = test_datagen.flow_from_dataframe(dataframe=testdf, directory=None, x_col='path', y_col='label', batch_size=20, class_mode='categorical', target_size=(32,32))
 
